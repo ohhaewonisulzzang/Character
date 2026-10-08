@@ -1,0 +1,189 @@
+/* =========================================================
+   NAVIGATION — 상단 메뉴 · 스크롤 유도 · 장면 이동 버튼
+   ========================================================= */
+body { --nav-fg: var(--ink); --nav-dim: rgba(22,19,15,.58); --nav-glass: rgba(239,233,222,.74); --nav-line: rgba(22,19,15,.12); }
+body[data-theme="dark"] { --nav-fg: var(--paper); --nav-dim: rgba(239,233,222,.62); --nav-glass: rgba(22,19,15,.55); --nav-line: rgba(239,233,222,.16); }
+
+/* ---------- top bar ---------- */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 70;
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px;
+  padding: 14px var(--pad);
+  color: var(--nav-fg);
+  transition: color .4s;
+}
+.brand { display: inline-flex; align-items: center; gap: 12px; justify-self: start; }
+.brand-mark {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: inset 0 0 0 7px var(--accent), inset 0 0 0 9px var(--paper);
+  transition: transform .5s cubic-bezier(.2,.8,.2,1);
+}
+.brand:hover .brand-mark { transform: rotate(180deg) scale(1.08); }
+.brand-txt { display: flex; flex-direction: column; line-height: 1; }
+.brand-txt b { font-family: var(--display); font-weight: 800; font-size: 22px; letter-spacing: -0.03em; }
+.brand-txt small { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; color: var(--nav-dim); margin-top: 4px; }
+
+.navpill, .made, .menu-btn, .pager {
+  background: var(--nav-glass);
+  border: 1px solid var(--nav-line);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  transition: background .4s, border-color .4s, color .4s;
+}
+.navpill { position: relative; border-radius: 999px; padding: 5px; box-shadow: 0 10px 30px -12px rgba(0,0,0,.25); }
+.nav-links { position: relative; display: flex; }
+.nav-links a {
+  position: relative; z-index: 1;
+  display: inline-flex; align-items: baseline; gap: 6px;
+  padding: 10px 15px; border-radius: 999px;
+  font-size: 15px; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap;
+  color: var(--nav-dim);
+  transition: color .3s;
+}
+.nav-links a .n { font-size: 10px; letter-spacing: .04em; opacity: .75; }
+.nav-links a:hover { color: var(--nav-fg); }
+.nav-links a.on { color: #fff; }
+.nav-ind {
+  position: absolute; left: 0; top: 5px; bottom: 5px; width: 0;
+  margin-left: 5px; border-radius: 999px; background: var(--accent);
+  box-shadow: 0 6px 18px -6px rgba(255,90,31,.8);
+  opacity: 0; visibility: hidden;
+}
+
+.topbar-r { justify-self: end; display: flex; align-items: center; gap: 10px; }
+.made { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; padding: 10px 16px; border-radius: 999px; }
+.made b { font-family: var(--ko); font-size: 14px; letter-spacing: 0; color: var(--accent); margin-left: 4px; }
+.menu-btn { display: none; position: relative; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; color: var(--nav-fg); }
+.menu-btn i { position: absolute; left: 14px; right: 14px; height: 2px; background: currentColor; border-radius: 2px; transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+.menu-btn i:first-child { top: 19px; }
+.menu-btn i:last-child { top: 27px; }
+.menu-open .menu-btn i:first-child { transform: translateY(4px) rotate(45deg); }
+.menu-open .menu-btn i:last-child { transform: translateY(-4px) rotate(-45deg); }
+
+/* ---------- 모바일 메뉴 ---------- */
+.menu-overlay {
+  position: fixed; inset: 0; z-index: 65; background: var(--ink); color: var(--paper);
+  padding: 110px var(--pad) 40px; display: flex; flex-direction: column;
+  clip-path: circle(0% at calc(100% - 40px) 38px); visibility: hidden;
+  transition: clip-path .6s cubic-bezier(.7,0,.2,1), visibility 0s .6s;
+}
+.menu-open .menu-overlay { clip-path: circle(150% at calc(100% - 40px) 38px); visibility: visible; transition: clip-path .7s cubic-bezier(.7,0,.2,1); }
+.menu-open .topbar { --nav-fg: var(--paper); --nav-dim: rgba(239,233,222,.62); --nav-glass: rgba(22,19,15,.55); --nav-line: rgba(239,233,222,.16); }
+.menu-open .pager, .menu-open .pg-tip { opacity: 0; pointer-events: none; }
+.menu-cap { color: var(--accent); margin-bottom: 18px; }
+#menuList { list-style: none; display: grid; gap: 2px; }
+#menuList a { display: flex; align-items: baseline; gap: 14px; padding: 8px 0; border-bottom: 1px solid rgba(239,233,222,.1); font-size: clamp(26px, 7vw, 40px); font-weight: 800; letter-spacing: -0.03em; }
+#menuList a .n { font-size: 12px; color: rgba(239,233,222,.4); }
+#menuList a.on { color: var(--accent); }
+
+/* ---------- 스크롤 유도 배지 ---------- */
+.scroll-cue {
+  position: absolute !important; left: 50%; bottom: 20px; z-index: 3 !important;
+  width: 118px; height: 118px; margin-left: -59px;
+  border: 0; background: none; padding: 0; cursor: pointer; color: var(--ink);
+  display: grid; place-items: center;
+}
+.cue-ring { position: absolute; inset: 0; width: 100%; height: 100%; animation: cueSpin 16s linear infinite; overflow: visible; }
+.cue-ring text { font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: 2.9px; fill: currentColor; }
+.cue-core {
+  position: relative; width: 60px; height: 60px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  box-shadow: 0 10px 26px -8px rgba(255,90,31,.75);
+  transition: transform .45s cubic-bezier(.2,.8,.2,1);
+}
+.cue-core::after {
+  content: ''; position: absolute; inset: -1px; border-radius: 50%;
+  border: 2px solid var(--accent); animation: cuePing 2.2s cubic-bezier(.2,.6,.3,1) infinite;
+}
+.cue-core svg {
+  position: absolute; left: 50%; top: 50%; width: 26px; height: 26px; margin: -13px 0 0 -13px;
+  fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round;
+  animation: cueArrow 1.8s cubic-bezier(.5,0,.3,1) infinite;
+}
+.cue-core svg + svg { animation-delay: .9s; }
+.scroll-cue:hover .cue-core, .scroll-cue:focus-visible .cue-core { transform: scale(1.12); }
+.scroll-cue:hover .cue-ring { animation-duration: 6s; }
+@keyframes cueSpin { to { transform: rotate(360deg); } }
+@keyframes cueArrow {
+  0% { transform: translateY(-14px); opacity: 0; }
+  35%, 65% { opacity: 1; }
+  100% { transform: translateY(14px); opacity: 0; }
+}
+@keyframes cuePing { 0% { transform: scale(1); opacity: .9; } 100% { transform: scale(1.9); opacity: 0; } }
+
+/* ---------- 장면 이동 버튼 ---------- */
+.pager {
+  position: fixed; right: var(--pad); bottom: 22px; z-index: 70;
+  display: flex; align-items: center; gap: 6px; padding: 6px;
+  border-radius: 999px; color: var(--nav-fg);
+  box-shadow: 0 14px 34px -14px rgba(0,0,0,.35);
+}
+.pg-btn {
+  position: relative; flex: none; display: grid; place-items: center;
+  width: 48px; height: 48px; border-radius: 50%; cursor: pointer;
+  border: 1px solid var(--nav-line); background: transparent; color: inherit;
+  transition: transform .3s cubic-bezier(.2,.8,.2,1), background .3s, opacity .3s;
+}
+.pg-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.pg-btn:hover:not(:disabled) { transform: translateY(-2px); background: var(--nav-line); }
+.pg-btn:disabled { opacity: .3; cursor: default; }
+.pg-next { width: 60px; height: 60px; border: 0; background: var(--accent); color: #fff; box-shadow: 0 8px 22px -8px rgba(255,90,31,.85); }
+.pg-next:hover:not(:disabled) { background: #ff6f3a; transform: translateY(2px); }
+.pg-next .pg-arrow { width: 24px; height: 24px; transition: transform .45s cubic-bezier(.2,.8,.2,1); }
+.pg-next.is-top .pg-arrow { transform: rotate(180deg); }
+.pg-ring { position: absolute; inset: -5px; width: calc(100% + 10px) !important; height: calc(100% + 10px) !important; transform: rotate(-90deg); pointer-events: none; }
+.pg-ring circle { fill: none; stroke: var(--nav-line); stroke-width: 2.5; }
+.pg-ring .pg-ring-fill { stroke: var(--accent); stroke-linecap: round; }
+.pg-info { display: flex; flex-direction: column; justify-content: center; min-width: 138px; padding: 0 10px; line-height: 1.25; }
+.pg-num { font-size: 10px; color: var(--nav-dim); }
+.pg-num b { color: var(--accent); font-weight: 600; }
+.pg-label { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
+.pg-sub { font-size: 12px; color: var(--nav-dim); min-height: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
+
+/* 처음 안내 말풍선 */
+.pg-tip {
+  position: fixed; right: var(--pad); bottom: 104px; z-index: 70; max-width: 300px;
+  padding: 14px 42px 14px 16px; border-radius: 16px;
+  background: var(--ink); color: var(--paper); font-size: 14px; line-height: 1.6; font-weight: 500;
+  box-shadow: 0 16px 40px -16px rgba(0,0,0,.6);
+  opacity: 0; transform: translateY(12px); pointer-events: none;
+  transition: opacity .4s, transform .5s cubic-bezier(.2,.8,.2,1);
+}
+body[data-theme="dark"] .pg-tip { background: var(--paper); color: var(--ink); }
+.pg-tip::after { content: ''; position: absolute; right: 30px; bottom: -6px; width: 12px; height: 12px; background: inherit; transform: rotate(45deg); }
+.pg-tip.show { opacity: 1; transform: none; pointer-events: auto; }
+.pg-tip b { color: var(--accent); }
+.pg-tip kbd { font-family: var(--mono); font-size: 12px; padding: 1px 6px; border-radius: 5px; border: 1px solid currentColor; border-bottom-width: 2px; opacity: .85; }
+.pg-tip button { position: absolute; top: 9px; right: 9px; width: 26px; height: 26px; border: 0; border-radius: 50%; background: rgba(128,128,128,.2); color: inherit; cursor: pointer; font-size: 12px; }
+
+@media (hover: none) { .kb-only { display: none; } }
+
+/* 키보드 사용자를 위한 포커스 표시 */
+.topbar a:focus-visible, .menu-btn:focus-visible, .pg-btn:focus-visible, .scroll-cue:focus-visible,
+.pg-tip button:focus-visible, #menuList a:focus-visible, .foot a:focus-visible {
+  outline: 3px solid var(--accent); outline-offset: 3px;
+}
+
+@media (max-width: 1280px) {
+  .nav-links a .n { display: none; }
+  .nav-links a { padding: 10px 12px; }
+}
+@media (max-width: 1100px) {
+  .navpill, .made { display: none; }
+  .menu-btn { display: block; }
+  .topbar { grid-template-columns: 1fr auto; }
+}
+@media (max-width: 760px) {
+  .brand-txt b { font-size: 19px; }
+  .brand-mark { width: 30px; height: 30px; }
+  .pager { left: 50%; right: auto; transform: translateX(-50%); bottom: 14px; }
+  .pg-info { min-width: 120px; }
+  .pg-tip { left: 16px; right: 16px; max-width: none; bottom: 96px; }
+  .pg-tip::after { right: auto; left: 50%; margin-left: -6px; }
+  .scroll-cue { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cue-ring, .cue-core svg, .cue-core::after { animation: none; }
+  .cue-core svg + svg { display: none; }
+}

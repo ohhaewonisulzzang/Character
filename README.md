@@ -8,9 +8,11 @@
 ```
 index.html              페이지 뼈대
 css/style.css           디자인
+css/nav.css             상단 메뉴 · 장면 이동 버튼 디자인
 js/config.js            ← 글자·이미지는 여기만 고치면 됨
 js/main.js              스크롤 연출
 js/stage.js             3D 캐릭터 무대 (회전, 동작, 표정, 스타일)
+js/navigation.js        버튼 · 키보드(↑↓ Space Home End) · 메뉴로 장면 이동
 assets/model/           임시 3D 캐릭터 (CC0 무료 에셋)
 assets/images/          Codex로 뽑은 이미지 넣는 곳
 prompts/CODEX_PROMPTS.md  Codex 이미지 프롬프트 모음

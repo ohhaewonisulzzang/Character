@@ -1,5 +1,6 @@
 import { CONFIG } from './config.js';
 import { Stage } from './stage.js';
+import { initNavigation } from './navigation.js';
 
 const { gsap, ScrollTrigger, Lenis } = window;
 gsap.registerPlugin(ScrollTrigger);
@@ -11,11 +12,12 @@ const C = CONFIG;
 const cr = C.creator;
 const isMobile = () => matchMedia('(max-width: 760px)').matches;
 const pad2 = (n) => String(n).padStart(2, '0');
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---------------- 텍스트 채우기 ---------------- */
 const binds = {
   name: C.character.name, nameKo: C.character.nameKo, tagline: C.character.tagline,
-  creatorEn: cr.nameEn, school: cr.school, grade: cr.grade, year: cr.year,
+  creatorEn: cr.nameEn, creatorKo: cr.name, school: cr.school, grade: cr.grade, year: cr.year,
 };
 document.querySelectorAll('[data-bind]').forEach((el) => (el.textContent = binds[el.dataset.bind]));
 document.title = `${C.character.name} — Character Model Sheet`;
@@ -48,7 +50,7 @@ $('#dialTicks').innerHTML = Array.from({ length: 72 }, (_, i) => {
 }).join('');
 
 /* ---------------- 스무스 스크롤 ---------------- */
-const lenis = new Lenis({ lerp: 0.1, smoothWheel: true });
+const lenis = new Lenis({ lerp: 0.1, smoothWheel: !reduced });
 lenis.on('scroll', ScrollTrigger.update);
 gsap.ticker.add((t) => lenis.raf(t * 1000));
 gsap.ticker.lagSmoothing(0);
@@ -101,8 +103,7 @@ function applyPose(sec) {
   if (p.anim) stage.play(p.anim);
   setStageImage(name === 'hero' ? C.character.heroImage : null);
   sec.onPose?.();
-
-  document.querySelectorAll('#chapters a').forEach((a) => a.classList.toggle('on', a.hash === `#${sec.id}`));
+  document.body.dataset.theme = sec.dataset.bg === 'paper' ? 'light' : 'dark';
 }
 
 /* ---------------- 섹션 연출 ---------------- */
@@ -113,7 +114,7 @@ function stepper(sec, n, perStep, onStep) {
   let cur = -1;
   const go = (i) => { if (i !== cur) { cur = i; onStep(i); } };
   sec.onPose = () => { const i = Math.max(cur, 0); cur = -1; go(i); };
-  ScrollTrigger.create({
+  sec.navTrigger = ScrollTrigger.create({
     trigger: sec, pin: true, start: 'top top', end: `+=${n * perStep}%`,
     onUpdate: (self) => go(Math.min(n - 1, Math.floor(self.progress * n))),
   });
@@ -128,7 +129,10 @@ const turnFrames = C.turnaroundImages.filter(Boolean);
 turnFrames.forEach((src) => (new Image().src = src));
 const viewItems = [...document.querySelectorAll('#viewList li')];
 const turnProxy = { a: 0 };
-gsap.to(turnProxy, {
+const turnSec = $('#turn');
+turnSec.navSteps = ['정면', '옆모습', '뒷모습', '반대쪽', '한 바퀴'];
+turnSec.navInclusive = true;
+turnSec.navTrigger = gsap.to(turnProxy, {
   a: 360, ease: 'none',
   scrollTrigger: { trigger: '#turn', pin: true, start: 'top top', end: '+=260%', scrub: 0.6 },
   onUpdate() {
@@ -141,10 +145,11 @@ gsap.to(turnProxy, {
     viewItems.forEach((li) => li.classList.toggle('on', +li.dataset.a === near));
     if (turnFrames.length && poseName === 'center') setStageImage(turnFrames[Math.round((a / 360) * turnFrames.length) % turnFrames.length]);
   },
-});
+}).scrollTrigger;
 
 // 04 모션
 const moveLis = [...document.querySelectorAll('#moveList li')];
+$('#moves').navSteps = C.motions.map((m) => m.ko);
 stepper($('#moves'), C.motions.length, 55, (i) => {
   const m = C.motions[i];
   $('#moveNum').textContent = pad2(i + 1);
@@ -158,6 +163,7 @@ stepper($('#moves'), C.motions.length, 55, (i) => {
 
 // 05 표정
 const faceTabs = [...document.querySelectorAll('#faceTabs div')];
+$('#faces').navSteps = C.expressions.map((e) => e.ko);
 stepper($('#faces'), C.expressions.length, 55, (i) => {
   const e = C.expressions[i];
   $('#faceWord').textContent = e.en;
@@ -170,6 +176,7 @@ stepper($('#faces'), C.expressions.length, 55, (i) => {
 
 // 06 스타일 바리에이션
 const railEls = [];
+$('#looks').navSteps = C.styles.map((s) => s.ko);
 $('#rail').innerHTML = C.styles.map(() => '<div></div>').join('');
 railEls.push(...document.querySelectorAll('#rail div'));
 stepper($('#looks'), C.styles.length, 45, (i) => {
@@ -190,7 +197,10 @@ stepper($('#looks'), C.styles.length, 45, (i) => {
 });
 
 // 08 크레딧 (이름이 한 글자씩 올라오고 주황색으로 채워짐)
-ScrollTrigger.create({ trigger: '#credit', pin: true, start: 'top top', end: '+=150%' });
+const creditSec = $('#credit');
+creditSec.navSteps = ['등장', cr.name];
+creditSec.navInclusive = true;
+creditSec.navTrigger = ScrollTrigger.create({ trigger: creditSec, pin: true, start: 'top top', end: '+=150%' });
 const creditTl = gsap.timeline({
   scrollTrigger: { trigger: $('#credit').parentElement, start: 'top 70%', end: 'bottom bottom', scrub: 0.8 },
 });
@@ -226,15 +236,14 @@ gsap.to('#heroWord .ch', {
   scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true },
 });
 
+// 스크롤 유도 배지는 내려가면 사라짐
+gsap.to('#scrollCue', { autoAlpha: 0, y: 40, ease: 'none', scrollTrigger: { trigger: '#hero', start: 'top top', end: '25% top', scrub: true } });
+
 // 전체 진행 바
 gsap.to('#progressBar', { scaleX: 1, ease: 'none', scrollTrigger: { start: 0, end: 'max', scrub: true } });
 
 // 섹션별 배경색 + 캐릭터 위치 (핀 트리거 다음에 만들어야 위치 계산이 맞음)
 const sections = [...document.querySelectorAll('.sec')];
-$('#chapters').innerHTML = sections.map((s) => `<a href="#${s.id}">${s.dataset.chapter}</a>`).join('');
-document.querySelectorAll('a[href^="#"]').forEach((a) =>
-  a.addEventListener('click', (e) => { e.preventDefault(); lenis.scrollTo(a.hash, { duration: 1.6 }); })
-);
 sections.forEach((sec) => {
   // 고정(pin)된 섹션은 pin-spacer 전체 길이를 기준으로 잡아야 중간에 끊기지 않음
   const spacer = sec.parentElement.classList.contains('pin-spacer') ? sec.parentElement : sec;
@@ -247,6 +256,10 @@ sections.forEach((sec) => {
     },
   });
 });
+
+// 버튼 · 키보드 · 메뉴 이동
+const nav = initNavigation({ lenis, sections, reduced });
+$('.foot a').addEventListener('click', (e) => { e.preventDefault(); lenis.scrollTo(0, { duration: reduced ? 0 : 2 }); });
 
 /* ---------------- 로딩 → 인트로 ---------------- */
 const pct = { v: 0 };
@@ -282,13 +295,16 @@ function intro() {
       lenis.start();
       document.body.classList.remove('is-loading');
       ScrollTrigger.refresh();
+      gsap.delayedCall(1.2, nav.showTip);
     },
   });
   tl.to('#loader', { yPercent: -100, duration: 1.1, ease: 'expo.inOut' })
     .from('#heroWord .ch', { yPercent: 110, stagger: 0.07, duration: 1.1, ease: 'expo.out' }, '-=0.45')
     .from(stageEl, { yPercent: 40, autoAlpha: 0, duration: 1.4, ease: 'expo.out' }, '<0.2')
     .from('.hero-top > *, .hero-bottom > *, .reg', { autoAlpha: 0, y: 16, stagger: 0.05, duration: 0.7, ease: 'power3.out' }, '<0.3')
-    .from('.topbar', { autoAlpha: 0, duration: 0.6 }, '<');
+    .from('.topbar', { autoAlpha: 0, y: -20, duration: 0.7, ease: 'power3.out' }, '<')
+    .from('.pager', { autoAlpha: 0, y: 30, duration: 0.7, ease: 'power3.out' }, '<0.1')
+    .from('#scrollCue', { autoAlpha: 0, scale: 0.6, duration: 0.9, ease: 'back.out(1.8)' }, '<0.1');
   stage.play('Wave', 0.2);
   gsap.delayedCall(3.2, () => poseName === 'hero' && stage.play('Idle'));
 }

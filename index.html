@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet" />
   <link href="css/style.css" rel="stylesheet" />
+  <link href="css/nav.css" rel="stylesheet" />
   <script type="importmap">
     {
       "imports": {
@@ -35,31 +36,76 @@
     <img id="stageImg" alt="" />
   </div>
 
-  <header class="topbar mono">
-    <a href="#hero" class="brand"><b data-bind="name"></b> / MODEL SHEET</a>
-    <nav id="chapters"></nav>
-    <span class="topbar-r">AI CHARACTER CONTEST <span data-bind="year"></span></span>
+  <header class="topbar">
+    <a href="#hero" class="brand" aria-label="처음으로">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-txt"><b data-bind="name"></b><small>MODEL SHEET</small></span>
+    </a>
+    <nav class="navpill" aria-label="섹션 바로가기">
+      <span class="nav-ind" id="navInd" aria-hidden="true"></span>
+      <div class="nav-links" id="chapters"></div>
+    </nav>
+    <div class="topbar-r">
+      <span class="made">MADE BY <b data-bind="creatorKo"></b></span>
+      <button class="menu-btn" id="menuBtn" aria-label="메뉴 열기" aria-expanded="false" aria-controls="menuOverlay"><i></i><i></i></button>
+    </div>
   </header>
+
+  <!-- 모바일 메뉴 -->
+  <div class="menu-overlay" id="menuOverlay" aria-hidden="true">
+    <p class="mono menu-cap">CHAPTERS</p>
+    <ol id="menuList"></ol>
+  </div>
+
+  <!-- 버튼으로 장면 넘기기 -->
+  <div class="pager" id="pager" role="navigation" aria-label="장면 이동">
+    <button class="pg-btn pg-prev" id="prevBtn" aria-label="이전 장면">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
+    </button>
+    <div class="pg-info" aria-live="polite">
+      <span class="pg-num mono"><b id="pgNum">01</b> / <span id="pgTotal">09</span></span>
+      <span class="pg-label" id="pgLabel">시작</span>
+      <span class="pg-sub" id="pgSub"></span>
+    </div>
+    <button class="pg-btn pg-next" id="nextBtn" aria-label="다음 장면">
+      <svg class="pg-ring" viewBox="0 0 60 60" aria-hidden="true"><circle cx="30" cy="30" r="27" /><circle class="pg-ring-fill" id="pgRing" cx="30" cy="30" r="27" /></svg>
+      <svg class="pg-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
+    </button>
+  </div>
+  <div class="pg-tip" id="pgTip" role="status">
+    스크롤이 불편하면 <b>다음 ↓</b> 버튼<span class="kb-only">이나 키보드 <kbd>↓</kbd> <kbd>↑</kbd></span>으로 넘겨보세요
+    <button id="tipClose" aria-label="안내 닫기">✕</button>
+  </div>
+
   <div class="progress"><i id="progressBar"></i></div>
 
   <main>
     <!-- 00 HERO -->
-    <section id="hero" class="sec" data-pose="hero" data-bg="paper" data-chapter="START">
+    <section id="hero" data-ko="시작" class="sec" data-pose="hero" data-bg="paper" data-chapter="START">
       <div class="reg reg-tl"></div><div class="reg reg-tr"></div><div class="reg reg-bl"></div><div class="reg reg-br"></div>
       <h1 class="hero-word" aria-label=""><span class="hw-in" id="heroWord"></span></h1>
       <div class="hero-top mono">
         <span>CHARACTER<br />MODEL SHEET</span>
         <span>NO.001<br />REV. A</span>
       </div>
+      <button class="scroll-cue" id="scrollCue" aria-label="아래로 내려가서 캐릭터 만나보기">
+        <svg class="cue-ring" viewBox="0 0 120 120" aria-hidden="true">
+          <defs><path id="cuePath" d="M60,60 m-47,0 a47,47 0 1,1 94,0 a47,47 0 1,1 -94,0" /></defs>
+          <text><textPath href="#cuePath">SCROLL DOWN • SCROLL DOWN • SCROLL DOWN • </textPath></text>
+        </svg>
+        <span class="cue-core" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" /></svg>
+          <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" /></svg>
+        </span>
+      </button>
       <div class="hero-bottom">
         <p class="hero-tag" data-bind="tagline"></p>
-        <div class="scroll-hint mono"><span>SCROLL</span><i></i></div>
         <p class="hero-by mono">DESIGNED BY<br /><b data-bind="creatorEn"></b></p>
       </div>
     </section>
 
     <!-- 01 ABOUT -->
-    <section id="about" class="sec" data-pose="right" data-bg="paper" data-chapter="ABOUT">
+    <section id="about" data-ko="소개" class="sec" data-pose="right" data-bg="paper" data-chapter="ABOUT">
       <div class="col-left">
         <p class="label mono">01 — WHO AM I</p>
         <h2 class="big-ko"><span data-bind="nameKo"></span><em>를 소개할게요</em></h2>
@@ -68,7 +114,7 @@
     </section>
 
     <!-- 02 TURNAROUND -->
-    <section id="turn" class="sec pin" data-pose="center" data-bg="paper" data-chapter="360°">
+    <section id="turn" data-ko="360° 회전" class="sec pin" data-pose="center" data-bg="paper" data-chapter="360°">
       <div class="turn-head">
         <p class="label mono">02 — TURNAROUND</p>
         <h2 class="display">360<sup>°</sup></h2>
@@ -89,7 +135,7 @@
     </section>
 
     <!-- 03 PROFILE -->
-    <section id="profile" class="sec" data-pose="left" data-bg="paper" data-chapter="PROFILE">
+    <section id="profile" data-ko="프로필" class="sec" data-pose="left" data-bg="paper" data-chapter="PROFILE">
       <div class="card">
         <div class="card-head mono"><span>03 — PROFILE</span><span>ID <b data-bind="name"></b>-001</span></div>
         <h2 class="card-name"><span data-bind="nameKo"></span> <small data-bind="name"></small></h2>
@@ -100,7 +146,7 @@
     </section>
 
     <!-- 04 MOTIONS -->
-    <section id="moves" class="sec pin" data-pose="moves" data-bg="cobalt" data-chapter="MOTION">
+    <section id="moves" data-ko="동작" class="sec pin" data-pose="moves" data-bg="cobalt" data-chapter="MOTION">
       <div class="moves-l">
         <p class="label mono">04 — MOTION</p>
         <div class="step-num display" id="moveNum">01</div>
@@ -114,7 +160,7 @@
     </section>
 
     <!-- 05 EXPRESSIONS -->
-    <section id="faces" class="sec pin" data-pose="faces" data-bg="paper" data-chapter="FACE">
+    <section id="faces" data-ko="표정" class="sec pin" data-pose="faces" data-bg="paper" data-chapter="FACE">
       <p class="label mono faces-label">05 — EXPRESSION</p>
       <div class="face-word display" id="faceWord"></div>
       <div class="bubble" id="faceBubble"></div>
@@ -122,7 +168,7 @@
     </section>
 
     <!-- 06 VARIATIONS -->
-    <section id="looks" class="sec pin" data-pose="looks" data-bg="ink" data-chapter="STYLE">
+    <section id="looks" data-ko="스타일" class="sec pin" data-pose="looks" data-bg="ink" data-chapter="STYLE">
       <div class="looks-top mono">
         <span>06 — STYLE VARIATIONS</span>
         <span><b id="lookIdx">01</b> / <span id="lookTotal"></span></span>
@@ -137,7 +183,7 @@
     </section>
 
     <!-- 07 LINEUP -->
-    <section id="lineup" class="sec" data-pose="hidden" data-bg="paper" data-start="top 85%" data-chapter="LINEUP">
+    <section id="lineup" data-ko="라인업" class="sec" data-pose="hidden" data-bg="paper" data-start="top 85%" data-chapter="LINEUP">
       <div class="lineup-head">
         <p class="label mono">07 — LINEUP</p>
         <h2 class="display">ONE CHARACTER,<br /><em id="lineupCount"></em> LOOKS.</h2>
@@ -146,7 +192,7 @@
     </section>
 
     <!-- 08 CREDIT -->
-    <section id="credit" class="sec pin" data-pose="credit" data-bg="ink" data-chapter="CREDIT">
+    <section id="credit" data-ko="만든 사람" class="sec pin" data-pose="credit" data-bg="ink" data-chapter="CREDIT">
       <div class="marquee display" aria-hidden="true"><div class="mq-in" id="marquee"></div></div>
       <div class="credit-in">
         <p class="credit-pre mono"><span>CREATED &amp; DESIGNED BY</span></p>
