@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BOLT — Character Model Sheet</title>
+  <meta name="description" content="AI 캐릭터 공모전 출품작 · 박영진 (고덕초등학교 6학년)" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet" />
+  <link href="css/style.css" rel="stylesheet" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.min.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <!-- 로딩 -->
+  <div id="loader">
+    <div class="loader-top mono"><span>MODEL SHEET NO.001</span><span>LOADING CHARACTER</span></div>
+    <div class="loader-num"><span id="loadPct">0</span><small>%</small></div>
+    <div class="loader-bar"><i id="loadBar"></i></div>
+  </div>
+
+  <!-- 고정 무대 (3D 캔버스 / 이미지) -->
+  <div id="stage">
+    <svg class="dial" viewBox="-100 -100 200 200" aria-hidden="true"><g id="dialTicks"></g><circle r="78" /></svg>
+    <div class="stage-shadow"></div>
+    <canvas id="gl"></canvas>
+    <img id="stageImg" alt="" />
+  </div>
+
+  <header class="topbar mono">
+    <a href="#hero" class="brand"><b data-bind="name"></b> / MODEL SHEET</a>
+    <nav id="chapters"></nav>
+    <span class="topbar-r">AI CHARACTER CONTEST <span data-bind="year"></span></span>
+  </header>
+  <div class="progress"><i id="progressBar"></i></div>
+
+  <main>
+    <!-- 00 HERO -->
+    <section id="hero" class="sec" data-pose="hero" data-bg="paper" data-chapter="START">
+      <div class="reg reg-tl"></div><div class="reg reg-tr"></div><div class="reg reg-bl"></div><div class="reg reg-br"></div>
+      <h1 class="hero-word" aria-label=""><span class="hw-in" id="heroWord"></span></h1>
+      <div class="hero-top mono">
+        <span>CHARACTER<br />MODEL SHEET</span>
+        <span>NO.001<br />REV. A</span>
+      </div>
+      <div class="hero-bottom">
+        <p class="hero-tag" data-bind="tagline"></p>
+        <div class="scroll-hint mono"><span>SCROLL</span><i></i></div>
+        <p class="hero-by mono">DESIGNED BY<br /><b data-bind="creatorEn"></b></p>
+      </div>
+    </section>
+
+    <!-- 01 ABOUT -->
+    <section id="about" class="sec" data-pose="right" data-bg="paper" data-chapter="ABOUT">
+      <div class="col-left">
+        <p class="label mono">01 — WHO AM I</p>
+        <h2 class="big-ko"><span data-bind="nameKo"></span><em>를 소개할게요</em></h2>
+        <p class="reveal-text" id="introText"></p>
+      </div>
+    </section>
+
+    <!-- 02 TURNAROUND -->
+    <section id="turn" class="sec pin" data-pose="center" data-bg="paper" data-chapter="360°">
+      <div class="turn-head">
+        <p class="label mono">02 — TURNAROUND</p>
+        <h2 class="display">360<sup>°</sup></h2>
+        <p class="muted">스크롤하면 캐릭터가 한 바퀴 돌아요.<br />앞, 옆, 뒤 — 어느 쪽에서 봐도 같은 캐릭터.</p>
+      </div>
+      <div class="turn-read mono">
+        <div class="angle"><span id="angleNum">000</span>°</div>
+        <ul id="viewList">
+          <li data-a="0">FRONT 정면</li>
+          <li data-a="45">3/4 RIGHT</li>
+          <li data-a="90">SIDE 측면</li>
+          <li data-a="135">3/4 BACK</li>
+          <li data-a="180">BACK 뒷면</li>
+          <li data-a="270">SIDE 측면</li>
+        </ul>
+      </div>
+      <div class="ruler" id="ruler"><i id="rulerFill"></i></div>
+    </section>
+
+    <!-- 03 PROFILE -->
+    <section id="profile" class="sec" data-pose="left" data-bg="paper" data-chapter="PROFILE">
+      <div class="card">
+        <div class="card-head mono"><span>03 — PROFILE</span><span>ID <b data-bind="name"></b>-001</span></div>
+        <h2 class="card-name"><span data-bind="nameKo"></span> <small data-bind="name"></small></h2>
+        <dl id="profileList"></dl>
+        <div class="chips" id="traitList"></div>
+        <div class="stats" id="statList"></div>
+      </div>
+    </section>
+
+    <!-- 04 MOTIONS -->
+    <section id="moves" class="sec pin" data-pose="moves" data-bg="cobalt" data-chapter="MOTION">
+      <div class="moves-l">
+        <p class="label mono">04 — MOTION</p>
+        <div class="step-num display" id="moveNum">01</div>
+        <div class="swap">
+          <h3 class="step-title display" id="moveEn"></h3>
+          <p class="step-ko" id="moveKo"></p>
+          <p class="step-desc" id="moveDesc"></p>
+        </div>
+      </div>
+      <ol class="moves-list mono" id="moveList"></ol>
+    </section>
+
+    <!-- 05 EXPRESSIONS -->
+    <section id="faces" class="sec pin" data-pose="faces" data-bg="paper" data-chapter="FACE">
+      <p class="label mono faces-label">05 — EXPRESSION</p>
+      <div class="face-word display" id="faceWord"></div>
+      <div class="bubble" id="faceBubble"></div>
+      <div class="face-tabs mono" id="faceTabs"></div>
+    </section>
+
+    <!-- 06 VARIATIONS -->
+    <section id="looks" class="sec pin" data-pose="looks" data-bg="ink" data-chapter="STYLE">
+      <div class="looks-top mono">
+        <span>06 — STYLE VARIATIONS</span>
+        <span><b id="lookIdx">01</b> / <span id="lookTotal"></span></span>
+      </div>
+      <div class="looks-info">
+        <p class="look-tag mono" id="lookTag"></p>
+        <h3 class="look-name display" id="lookName"></h3>
+        <p class="look-ko" id="lookKo"></p>
+        <p class="look-desc" id="lookDesc"></p>
+      </div>
+      <div class="rail" id="rail"></div>
+    </section>
+
+    <!-- 07 LINEUP -->
+    <section id="lineup" class="sec" data-pose="hidden" data-bg="paper" data-start="top 85%" data-chapter="LINEUP">
+      <div class="lineup-head">
+        <p class="label mono">07 — LINEUP</p>
+        <h2 class="display">ONE CHARACTER,<br /><em id="lineupCount"></em> LOOKS.</h2>
+      </div>
+      <div class="grid" id="grid"></div>
+    </section>
+
+    <!-- 08 CREDIT -->
+    <section id="credit" class="sec pin" data-pose="credit" data-bg="ink" data-chapter="CREDIT">
+      <div class="marquee display" aria-hidden="true"><div class="mq-in" id="marquee"></div></div>
+      <div class="credit-in">
+        <p class="credit-pre mono"><span>CREATED &amp; DESIGNED BY</span></p>
+        <h2 class="credit-name" id="creditName"></h2>
+        <p class="credit-en mono" data-bind="creatorEn"></p>
+        <div class="credit-school">
+          <span class="cs-line"></span>
+          <p><b data-bind="school"></b> <em data-bind="grade"></em></p>
+          <span class="cs-line"></span>
+        </div>
+      </div>
+      <svg class="stamp" viewBox="0 0 200 200" aria-hidden="true">
+        <defs><path id="circ" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0" /></defs>
+        <text><textPath href="#circ" id="stampText"></textPath></text>
+        <text x="100" y="112" text-anchor="middle" class="stamp-mid" id="stampYear"></text>
+      </svg>
+    </section>
+
+    <footer class="foot mono">
+      <span id="creditsText"></span>
+      <a href="#hero">BACK TO TOP ↑</a>
+    </footer>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js" integrity="sha384-B2WBjDzEjJpYvhmi2UyEn7rektqkf5suS6sNoyyrf0EBAwBHdkiXxIlU0V5Ru2ed" crossorigin="anonymous"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
